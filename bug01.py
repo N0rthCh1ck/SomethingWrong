@@ -17,7 +17,6 @@
 import requests
 import itertools as its
 import threading
-import base64
 
 # 多线程
 class PocThread(threading.Thread):
@@ -26,14 +25,11 @@ class PocThread(threading.Thread):
 		threading.Thread.__init__(self)
 		self.Thread_ID = Thread_ID
 	def run(self):
-		length = len(phone)
-		end = length/10 + 1
-		start = end - 1001
-		for i in phone[start:end]:
-			Prue_spider(phone_num)
+		for phone_num in Phone_nums[self.Thread_ID]:
+			spider(phone_num)
 
 # 爬虫
-def Prue_spider(phone_num):
+def spider(phone_num):
 	url = base_url + phone_num + ".jpeg"
 	response = requests.get(url)
 	# 长度为306说明不存在，此处通过响应头返回值判断是否存在
@@ -44,10 +40,13 @@ def Prue_spider(phone_num):
 def genarator(prev_str, repeat):
 	words = "0123456789"
 	dic = its.product(words, repeat=repeat)
-	for i in dic:
-		phone.append(prev_str+"".join(i))
+	for j in dic:
+		num = prev_str + "".join(j)
+		phone.append(num)
 
 phone = []
+Phone_nums = [[]]*10
+
 base_url = "不给"
 def main():
 	# num：自定义号段
@@ -57,14 +56,16 @@ def main():
 		print("手机号格式输入错误")
 		return
 	elif len(phone_num) == 11:
-		Prue_spider(phone_num)
+		spider(phone_num)
 	else:
 		repeat = 11 - len(phone_num)
 		if repeat != 0:
 			genarator(phone_num,repeat)
-			print(phone)
+			for i in range(10):
+				start = i * len(phone)//10
+				end = (i+1) * len(phone)//10
+				Phone_nums[i] = phone[start:end]
 		for i in range(10):
-			i = int(i)
 			try:
 				PocThread(i).start()
 			except Exception as e:
